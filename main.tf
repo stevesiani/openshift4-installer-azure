@@ -212,9 +212,9 @@ module "dns" {
 }
 
 resource "azurerm_resource_group" "main" {
-  #count = var.azure_resource_group_name == "" ? 1 : 0
+  count = var.azure_resource_group_name == "" ? 1 : 0
 
-  name     = "${local.cluster_id}-rg"
+  name     = var.azure_resource_group_name == "" ? "${local.cluster_id}-rg" : var.azure_resource_group_name
   location = var.azure_region
   tags     = local.tags
 }
