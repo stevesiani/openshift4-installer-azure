@@ -94,7 +94,7 @@ azure_client_secret    = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
 
     ```bash
     terraform init
-    terraform plan
+    terraform plan -var-file="variables-azure.tfvars"
     terraform apply
     ```
 
