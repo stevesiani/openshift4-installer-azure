@@ -95,7 +95,9 @@ azure_client_secret    = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
     ```bash
     terraform init
     terraform plan -var-file="variables-azure.tfvars"
-    terraform apply
+    terraform apply -var-file="variables-azure.tfvars" -auto-approve
+
+    terraform apply -destroy -var-file="variables-azure.tfvars"
     ```
 
 4. Destroy bootstrap node
