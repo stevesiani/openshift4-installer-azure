@@ -53,6 +53,7 @@ locals {
 
 resource "null_resource" "download_binaries" {
   provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
     when = create
     command = templatefile("${path.module}/scripts/download.sh.tmpl", {
       installer_workspace  = local.installer_workspace
@@ -84,6 +85,7 @@ resource "null_resource" "generate_manifests" {
   ]
 
   provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
     command = templatefile("${path.module}/scripts/manifests.sh.tmpl", {
       installer_workspace = local.installer_workspace
     })
@@ -111,6 +113,7 @@ resource "null_resource" "generate_ignition" {
   ]
 
   provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
     command = templatefile("${path.module}/scripts/ignition.sh.tmpl", {
       installer_workspace = local.installer_workspace
       cluster_id          = var.cluster_id
