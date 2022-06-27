@@ -296,7 +296,7 @@ resource "null_resource" "delete_bootstrap" {
     interpreter = ["/bin/bash", "-c"]
     command = templatefile("${path.module}/main.sh.tmpl", {
       azurerm_rg            = data.azurerm_resource_group.main.name
-      cluster_id            = local.client_id
+      cluster_id            = local.cluster_id
       azure_private         = var.azure_private
       azure_client_id       = var.azure_client_id
       azure_client_secret   = var.azure_client_secret
