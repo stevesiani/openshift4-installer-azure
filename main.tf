@@ -293,15 +293,14 @@ resource "null_resource" "delete_bootstrap" {
   ]
 
   provisioner "local-exec" {
-    command = <<EOF
-./installer-files/openshift-install --dir=./installer-files wait-for bootstrap-complete --log-level=debug
-az vm delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap -y
-az disk delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap_OSDisk -y
-if [[ "${var.azure_private}" == "false" ]]; then
-  az network nic ip-config update -g ${data.azurerm_resource_group.main.name} -n bootstrap-nic-ip-v4 --nic-name ${local.cluster_id}-bootstrap-nic --remove PublicIpAddress
-  az network public-ip delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap-pip-v4
-fi
-az network nic delete -g ${data.azurerm_resource_group.main.name} -n ${local.cluster_id}-bootstrap-nic
-EOF    
+    interpreter = ["/bin/bash", "-c"]
+    command = templatefile("${path.module}/main.sh.tmpl", {
+      azurerm_rg            = data.azurerm_resource_group.main.name
+      cluster_id            = local.client_id
+      azure_private         = var.azure_private
+      azure_client_id       = var.azure_client_id
+      azure_client_secret   = var.azure_client_secret
+      azure_tenant_id       = var.azure_tenant_id
+    })  
   }
 }

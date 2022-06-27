@@ -1,0 +1,11 @@
+#!/bin/bash
+
+./installer-files/openshift-install --dir=./installer-files wait-for bootstrap-complete --log-level=debug
+az login --service-principal -u ${azure_client_id} -p ${azure_client_secret} --tenant ${azure_tenant_id}
+az vm delete -g ${azurerm_rg} -n ${cluster_id}-bootstrap -y
+az disk delete -g ${azurerm_rg} -n ${cluster_id}-bootstrap_OSDisk -y
+if [[ "${azure_private}" == "false" ]]; then
+  az network nic ip-config update -g ${azurerm_rg} -n bootstrap-nic-ip-v4 --nic-name ${cluster_id}-bootstrap-nic --remove PublicIpAddress
+  az network public-ip delete -g ${azurerm_rg} -n ${cluster_id}-bootstrap-pip-v4
+fi
+az network nic delete -g ${azurerm_rg} -n ${cluster_id}-bootstrap-nic
