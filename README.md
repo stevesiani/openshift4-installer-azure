@@ -103,13 +103,14 @@ azure_client_secret    = "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"
 4. Destroy bootstrap node
 
     ```bash
-    TF_VAR_bootstrap_complete=true terraform apply
+    TF_VAR_bootstrap_complete=true terraform apply -var-file="variables-azure.tfvars"
     ```
 
 5. To access your cluster
 
     ```bash
-    $ export KUBECONFIG=$PWD/installer-files/auth/kubeconfig
+    $ cd YOUR_PROJECT_DIRECTORY
+    $ cp installer-files/auth/kubeconfig ~/.kube/config
     $ oc get nodes
     NAME                                 STATUS   ROLES          AGE   VERSION
     fs2021-hv0eu-infra-eastus21-6kqlt    Ready    infra,worker   20m   v1.19.0+3b01205
@@ -151,3 +152,79 @@ fs2021-hv0eu-worker-eastus23-tsw44   Running   Standard_D8s_v3   eastus2   3    
 ```
 
 The infra nodes host the router/ingress pods, all the monitoring infrastrucutre, and the image registry.
+
+## Connect to the Openshift container plateform console
+```bash
+$ oc whoami --show-console
+https://console-openshift-console.apps.ocp4.openshift.lcbo.com
+```
+
+To login to the console, you need to provide the `kubeadmin` creds. 
+Find the password in the installer directory:
+
+```bash
+    $ cd YOUR_PROJECT_DIRECTORY
+    $ cat installer-files/auth/kubeadmin- 
+```
+
+## Upgrade Openshift version
+### 1st Step: Backing up etcd data
+
+```bash
+    # Start a degug session for a master node (COnnect to a master node, just one single master node not all)
+    $ oc debug node/<node_name>
+    $ chroot /host
+    # Run the cluster-backup.sh script 
+    $ /usr/local/bin/cluster-backup.sh /home/core/assets/backup
+```
+The output run in master node shows we saved 2 files: `snapshot_<datetimestamp>.db` (etcd snapshot) and `static_kuberesources_<datetimestamp>.tar.gz` files that contains resources for the statics pods.
+
+### 2nd Step: Update OCP cluster
+
+- Note your current version
+```bash
+    $oc get clusterversion
+    NAME      VERSION   AVAILABLE   PROGRESSING   SINCE   STATUS
+    version   4.6.13     True        False        7h48m    Cluster version is 4.6.13
+```
+
+- Review the current update channel information and confirm that your channel is set to stable
+```bash
+    $oc get clusterversion -o json|jq ".items[0].spec"
+    {
+        "channel": "stable-4.6",
+        "clusterID": "50eba32e-3b1a-474b-a562-2325b9e5ef50",
+        "upstream": "https://api.openshift.com/api/upgrades_info/v1/graph"
+    }
+```
+
+- Identify the available updates
+```bash
+    $oc adm upgrade
+    Cluster version is 4.6.13
+
+    Updates:
+
+    VERSION IMAGE
+    4.6.15  quay.io/openshift-release-dev/ocp-release@sha256:b70f550e3fa94af2f7d60a3437ec0275194db36f2dc49991da2336fe21e2824c
+    4.6.16  quay.io/openshift-release-dev/ocp-release@sha256:3e855ad88f46ad1b7f56c312f078ca6adaba623c5d4b360143f9f82d2f349741
+    .
+    .
+    .
+    4.6.56  quay.io/openshift-release-dev/ocp-release@sha256:ebe1db9c641da831e5efdaaddb895477d80e028f338c4724e03df89a5d0ca4cc
+```
+
+- Update to the latest version
+```bash
+    $oc adm upgrade --to-latest=true 
+```
+
+- Update to a specific version
+```bash
+    $oc adm upgrade --to=<version> 
+```
+
+- Review the status the updated version
+```bash
+    $oc get clusterversion -o json|jq ".items[0].spec" 
+```
